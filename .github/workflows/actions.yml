@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '*/10 * * * *' # Every 10m
 
+permissions:
+  contents: write # <-- It must be here, at the top level.
+  
 jobs:
   build:
     runs-on: ubuntu-latest
