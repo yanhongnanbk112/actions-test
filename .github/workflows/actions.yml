@@ -1,12 +1,12 @@
 name: run main.py
 
 on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
   schedule:
     - cron: '*/10 * * * *' # Every 10m
-
-# Add this permissions block to grant write access
-permissions:
-  contents: write
 
 jobs:
   build:
