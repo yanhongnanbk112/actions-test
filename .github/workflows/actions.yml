@@ -2,11 +2,14 @@ name: run main.py
 
 on:
   # Cron jobs are in UTC.
-  # 9:15 AM UTC
+  # Triggers status 01 at 13:10 UTC
   schedule:
-    - cron: '25 9 * * *'
-  # 9:20 AM UTC
-    - cron: '30 9 * * *'
+    - cron: '10 13 * * *'
+  # Triggers status 02 at 13:20 UTC
+    - cron: '20 13 * * *'
+  # Triggers status 03 (Lunch) at 13:30 UTC
+    - cron: '30 13 * * *'
+  
   push:
     branches:
       - main
@@ -38,12 +41,15 @@ jobs:
           # Get the current minute of the hour (in UTC)
           minute_of_hour=$(date -u +%M | sed 's/^0//')
           
-          if [ "$minute_of_hour" -eq 15 ]; then
+          if [ "$minute_of_hour" -eq 10 ]; then
             echo "status_code=01" >> $GITHUB_ENV
-            echo "::notice::Scheduled to run for status 01."
+            echo "::notice::Scheduled to run for status 01 (Available)."
           elif [ "$minute_of_hour" -eq 20 ]; then
             echo "status_code=02" >> $GITHUB_ENV
-            echo "::notice::Scheduled to run for status 02."
+            echo "::notice::Scheduled to run for status 02 (Break)."
+          elif [ "$minute_of_hour" -eq 30 ]; then
+            echo "status_code=03" >> $GITHUB_ENV
+            echo "::notice::Scheduled to run for status 03 (Lunch)."
           else
             # Default for manual triggers or other unscheduled runs
             echo "status_code=10" >> $GITHUB_ENV
