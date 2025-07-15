@@ -1,47 +1,69 @@
 name: run main.py
 
 on:
+  # Cron jobs are in UTC.
+  # 9:15 AM UTC
+  schedule:
+    - cron: '15 9 * * *'
+  # 9:20 AM UTC
+    - cron: '20 9 * * *'
   push:
     branches:
       - main
   workflow_dispatch:
-  schedule:
-    - cron: '*/10 * * * *' # Every 10m
 
 permissions:
-  contents: write # <-- It must be here, at the top level.
-  
+  contents: write
+
 jobs:
-  build:
+  run-script:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repo content
-        uses: actions/checkout@v2 # checkout the repository content to github runner
+        uses: actions/checkout@v2
 
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9' # install the python version needed
-          
+          python-version: '3.9'
+
       - name: install python packages
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: execute py script # run main.py
-        env:
-          SOME_SECRET: ${{ secrets.SOME_SECRET }}
-        run: python main.py
+      - name: determine status code
+        id: set-status
+        run: |
+          # Get the current minute of the hour (in UTC)
+          minute_of_hour=$(date -u +%M | sed 's/^0//')
           
+          if [ "$minute_of_hour" -eq 15 ]; then
+            echo "status_code=01" >> $GITHUB_ENV
+            echo "::notice::Scheduled to run for status 01."
+          elif [ "$minute_of_hour" -eq 20 ]; then
+            echo "status_code=02" >> $GITHUB_ENV
+            echo "::notice::Scheduled to run for status 02."
+          else
+            # Default for manual triggers or other unscheduled runs
+            echo "status_code=10" >> $GITHUB_ENV
+            echo "::notice::Running with default status 10 for unscheduled trigger."
+          fi
+
+      - name: execute py script
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python main.py ${{ env.status_code }}
+
       - name: commit files
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
           git diff-index --quiet HEAD || (git commit -a -m "updated logs" --allow-empty)
-          
+
       - name: push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PUSH_TOKEN }}
           branch: main
