@@ -4,11 +4,14 @@ on:
   schedule:
     - cron: '*/10 * * * *' # Every 10m
 
+# Add this permissions block to grant write access
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - name: checkout repo content
         uses: actions/checkout@v2 # checkout the repository content to github runner
 
@@ -38,4 +41,4 @@ jobs:
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main 
+          branch: main
